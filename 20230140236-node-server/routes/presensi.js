@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const presensiController = require('../controllers/presensiController');
-const { verifyToken } = require('../middleware/permissionMiddleware'); // Pastikan path ini benar
+const { verifyToken } = require('../middleware/authMiddleware'); // Pastikan path ini benar
 
 // Middleware verifyToken WAJIB ada agar controller bisa baca req.user
 // Tanpa ini, CheckIn akan error 500

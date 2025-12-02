@@ -21,3 +21,22 @@ exports.isAdmin = (req, res, next) => {
     return res.status(403).json({ message: 'Akses ditolak: Hanya untuk admin' });
   }
 };
+
+// =========================
+//  VERIFY TOKEN MIDDELWARE
+// =========================
+exports.verifyToken = (req, res, next) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ message: "Token tidak valid atau tidak ditemukan." });
+  }
+
+  req.userData = {
+    id: user.id,
+    nama: user.nama,
+    role: user.role,
+  };
+
+  next();
+};

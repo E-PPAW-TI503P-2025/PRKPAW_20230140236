@@ -47,11 +47,7 @@ exports.getDailyReport = async (req, res) => {
     // 2. Ambil data dari database dengan Relasi
     const records = await Presensi.findAll({
     where: wherePresensi,
-    include: [{ 
-      model: User, 
-      as: 'user', 
-      attributes: ['nama', 'email'] 
-    }], 
+    include: [userInclude],
     order: [['checkIn', 'DESC']]
     });
 
