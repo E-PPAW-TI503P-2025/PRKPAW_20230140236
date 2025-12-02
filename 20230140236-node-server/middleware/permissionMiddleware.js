@@ -1,10 +1,14 @@
 exports.addUserData = (req, res, next) => {
-  console.log('Middleware: Menambahkan data user dummy...');
-  req.user = {
-    id: 123,
-    nama: "User Admin",
-    role: 'admin' 
-  };
+  const user = req.user;
+  if (user) {
+    req.userData = {
+      id: user.id,
+      nama: user.nama,
+      role: user.role,
+    };
+    console.log('Middleware: Data pengguna ditambahkan ke request.', req.userData);
+  }
+  
   next();
 };
 
