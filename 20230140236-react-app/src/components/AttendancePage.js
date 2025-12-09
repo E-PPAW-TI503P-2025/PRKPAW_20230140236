@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Loader2, Navigation, LogIn, LogOut } from 'lucide-react';
 import Navbar from './Navbar';
+
+// menambahkan import untuk webcam
+import Webcam from 'react-webcam';
 
 // 1. Import React Leaflet dan CSS-nya
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -29,6 +32,13 @@ function AttendancePage() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [image, setImage] = useState(null); 
+ 	  const webcamRef = useRef(null); 
+ 	  const capture = useCallback(() => {
+ 	    const imageSrc = webcamRef.current.getScreenshot();
+ 	    setImage(imageSrc); 
+ 	  }, [webcamRef]);
+
 
   // Fungsi mendapatkan lokasi
   const getLocation = () => {
@@ -61,33 +71,36 @@ function AttendancePage() {
     setMessage(null);
     setError(null);
 
-    if (!coords) {
-      setError("Lokasi belum didapatkan. Mohon izinkan akses lokasi browser Anda.");
-      return;
-    }
+    if (!coords || !image) {
+ 	      setError("Lokasi dan Foto wajib ada!");
+ 	      return;
+ 	    }
+ 	
+ 	    try {
+ 	      
+ 	      const blob = await (await fetch(image)).blob();
+        setIsLoading(true);
+        const token = localStorage.getItem('token'); 
 
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('token'); 
-
-      if (!token) {
-        setError("Anda belum login (Token tidak ditemukan).");
-        setIsLoading(false);
+          if (!token) {
+          setError("Anda belum login (Token tidak ditemukan).");
+          setIsLoading(false);
         return;
       }
+      //Buat FormData
+ 	      const formData = new FormData();
+ 	      formData.append('latitude', coords.lat);
+ 	      formData.append('longitude', coords.lng);
+ 	      formData.append('image', blob, 'selfie.jpg'); 
+ 	
+ 	      const response = await axios.post(
+ 	        'http://localhost:3001/api/presensi/check-in',
+ 	        formData, 
+ 	        { headers: { Authorization: `Bearer ${getToken()}` } }
+ 	      );
+ 	      
+ 	      setMessage(response.data.message);
 
-      const response = await axios.post(
-        "http://localhost:3001/api/presensi/check-in",
-        {
-          latitude: coords.lat,
-          longitude: coords.lng
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
 
       setMessage(response.data.message || "Check-In Berhasil");
     } catch (err) {
@@ -203,6 +216,33 @@ function AttendancePage() {
             </div>
           )}
 
+          {/* Tambahkan Tampilan Kamera */}
+ 	      <div className="my-4 border rounded-lg overflow-hidden bg-black">
+ 	        {image ? (
+ 	          <img src={image} alt="Selfie" className="w-full" />
+ 	        ) : (
+ 	          <Webcam
+ 	            audio={false}
+ 	            ref={webcamRef}
+ 	            screenshotFormat="image/jpeg"
+ 	            className="w-full"
+ 	          />
+ 	        )}
+ 	      </div>
+ 	
+ 	      <div className="mb-4">
+ 	        {!image ? (
+ 	          <button onClick={capture} className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+ 	            Ambil Foto 📸
+ 	          </button>
+ 	        ) : (
+ 	          <button onClick={() => setImage(null)} className="bg-gray-500 text-white px-4 py-2 rounded w-full">
+ 	            Foto Ulang 🔄
+ 	          </button>
+ 	        )}
+ 	      </div>
+        
+          {/* Tombol Check-In & Check-Out */}
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={handleCheckIn}

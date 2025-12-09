@@ -3,6 +3,7 @@ const cors = require("cors");
 const app = express();
 const PORT = 3001;
 const morgan = require("morgan");
+const path = require('path'); 
 
 // Impor router
 const presensiRoutes = require("./routes/presensi");
@@ -26,6 +27,9 @@ app.get("/", (req, res) => {
 app.use("/api/presensi", presensiRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/auth", authRoutes);
+
+// Middleware untuk melayani file statis dari folder 'uploads'
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Jalankan server
 app.listen(PORT, () => {

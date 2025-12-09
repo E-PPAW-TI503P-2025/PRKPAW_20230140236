@@ -5,7 +5,7 @@ const { verifyToken } = require('../middleware/authMiddleware'); // Pastikan pat
 
 // Middleware verifyToken WAJIB ada agar controller bisa baca req.user
 // Tanpa ini, CheckIn akan error 500
-router.post('/check-in', verifyToken, presensiController.CheckIn);
+router.post('/check-in', [verifyToken, presensiController.upload.single('image')], presensiController.CheckIn);
 router.post('/check-out', verifyToken, presensiController.CheckOut);
 
 // Route tambahan (opsional, jika Anda punya fungsi delete/update)
