@@ -68,52 +68,60 @@ function AttendancePage() {
   }, []);
 
   const handleCheckIn = async () => {
-    setMessage(null);
-    setError(null);
+    setMessage(null);
+    setError(null);
 
-    if (!coords || !image) {
- 	      setError("Lokasi dan Foto wajib ada!");
- 	      return;
- 	    }
- 	
- 	    try {
- 	      
- 	      const blob = await (await fetch(image)).blob();
-        setIsLoading(true);
-        const token = localStorage.getItem('token'); 
+    if (!coords || !image) {
+        setError("Lokasi dan Foto wajib ada!");
+        return;
+    }
+  
+    try {
+        // 1. Konversi Base64 ke Blob
+        const blob = await (await fetch(image)).blob();
+        setIsLoading(true);
 
-          if (!token) {
-          setError("Anda belum login (Token tidak ditemukan).");
-          setIsLoading(false);
-        return;
-      }
-      //Buat FormData
- 	      const formData = new FormData();
- 	      formData.append('latitude', coords.lat);
- 	      formData.append('longitude', coords.lng);
- 	      formData.append('image', blob, 'selfie.jpg'); 
- 	
- 	      const response = await axios.post(
- 	        'http://localhost:3001/api/presensi/check-in',
- 	        formData, 
- 	        { headers: { Authorization: `Bearer ${getToken()}` } }
- 	      );
- 	      
- 	      setMessage(response.data.message);
+        // 2. Ambil token dari LocalStorage
+        const token = localStorage.getItem('token'); 
 
+        if (!token) {
+          setError("Anda belum login (Token tidak ditemukan).");
+          setIsLoading(false);
+          return;
+        }
 
-      setMessage(response.data.message || "Check-In Berhasil");
-    } catch (err) {
-      console.error(err);
-      setError(
-        err.response && err.response.data 
-          ? err.response.data.message 
-          : "Gagal melakukan Check-In"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // 3. Buat FormData
+        const formData = new FormData();
+        formData.append('latitude', coords.lat);
+        formData.append('longitude', coords.lng);
+        // Pastikan nama 'image' ini sama dengan upload.single('image') di route backend
+        formData.append('image', blob, 'selfie.jpg'); 
+  
+        const response = await axios.post(
+          'http://localhost:3001/api/presensi/check-in',
+          formData, 
+          { 
+            headers: { 
+                // PERBAIKAN DISINI: Gunakan variabel 'token', bukan fungsi getToken()
+                Authorization: `Bearer ${token}` 
+            } 
+          }
+        );
+        
+        setMessage(response.data.message || "Check-In Berhasil");
+        // Optional: Reset image setelah berhasil
+        // setImage(null); 
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response && err.response.data 
+          ? err.response.data.message 
+          : "Gagal melakukan Check-In"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCheckOut = async () => {
     setMessage(null);
